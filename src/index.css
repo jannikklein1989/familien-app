@@ -1,0 +1,43 @@
+@import "tailwindcss";
+@import "@fontsource/space-grotesk/latin-400.css";
+@import "@fontsource/space-grotesk/latin-500.css";
+@import "@fontsource/space-grotesk/latin-600.css";
+@import "@fontsource/space-grotesk/latin-700.css";
+@import "@fontsource/space-mono/latin-400.css";
+@import "@fontsource/space-mono/latin-700.css";
+
+@theme {
+  --font-sans: "Space Grotesk", system-ui, sans-serif;
+  --font-mono: "Space Mono", ui-monospace, monospace;
+  --color-bg: #F3F6EF;
+  --color-card: #FFFFFF;
+  --color-line: #E2E6DC;
+  --color-line-soft: #EEF1EA;
+  --color-ink: #141413;
+  --color-muted: #5E5D57;
+  --color-green: #0F5D4C;
+  --color-green-dark: #0A4638;
+  --color-lime: #C8F031;
+  --color-lime-ink: #0F3A2F;
+  --color-alert: #C2321B;
+  --color-jannik: #2F6FDB;
+  --color-jannik-soft: #E7EEFB;
+  --color-jannik-ink: #1E4FA8;
+  --color-irene: #E8833A;
+  --color-irene-soft: #FCEBDD;
+  --color-irene-ink: #93470F;
+}
+
+html, body, #root { min-height: 100%; }
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-tap-highlight-color: transparent;
+}
+button { cursor: pointer; }
+.label { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--color-muted); }
+.pb-safe { padding-bottom: calc(env(safe-area-inset-bottom) + 96px); }
+.tabbar { padding-bottom: env(safe-area-inset-bottom); }
+input, select, textarea { font: inherit; }
