@@ -25,10 +25,26 @@ Ohne `.env` läuft die App im **Demo-Modus**: Daten liegen nur im Browser (local
 Beim ersten Login legt die erste Person einen Haushalt an. Den Einladungscode findet man in der Tabelle `households`
 (Einladen per UI kommt noch), die zweite Person tritt damit bei.
 
+## Sprachmodus (Claude Sonnet)
+
+Der Mikro-Button schickt den gesprochenen bzw. diktierten Text an die Edge Function `voice`.
+Die ruft Claude Sonnet 5.5 auf (Effort `low`, serverseitiger Fallback auf ein anderes Modell aktiv, falls Sonnet
+mal überlastet ist) und liefert To-dos, Einkauf und Rezepte zurück. In der App erscheint eine Vorschau, erst
+"Speichern" trägt ein. **Der API-Key liegt nur auf dem Server, nie in der App.**
+
+1. Supabase Dashboard → Edge Functions → Secrets: `ANTHROPIC_API_KEY` = dein Key von console.anthropic.com.
+2. Funktion deployen, entweder per CLI `supabase functions deploy voice --project-ref <ref>` oder im Dashboard
+   (Edge Functions → Deploy new function → Name `voice`, Inhalt von `supabase/functions/voice/index.ts` und
+   `interpret.ts`).
+3. Fertig. Ohne Supabase (Demo-Modus) nutzt die App einen einfachen lokalen Parser.
+
+Kosten: ca. 4.000 Input- + 300 Output-Tokens pro Eingabe, also rund 0,01 $; 300 Eingaben/Monat ≈ 2 $.
+
 ## Struktur
 
 - `src/lib/dates.ts` – Kündigungsfristen, Wiederholungen, Datumshelfer
-- `src/lib/quick.ts` – Schnell-Eingabe ohne KI (Phase 3: Claude Haiku)
+- `src/lib/quick.ts` – Mengen/Einheiten, Kategorien, lokaler Parser für den Demo-Modus
+- `src/lib/voice.ts` + `supabase/functions/voice` – Sprachmodus mit Claude Sonnet
 - `src/lib/demo.ts` / `supabase.ts` – zwei Backends hinter einer Schnittstelle
 - `src/pages/*` – Screens
 - `supabase/migrations` – Schema inkl. Row-Level-Security

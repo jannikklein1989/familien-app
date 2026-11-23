@@ -127,8 +127,8 @@ Alle Tabellen haben `id uuid`, `household_id`, `created_at`, `created_by`. RLS-R
 10. **Notfallkontakte** (schnell erreichbar, Anruf-Button).
 11. **Google Kalender:** beide Kalender (plus gemeinsamer) anzeigen, Termin aus der App eintragen.
 
-### Phase 3 – KI & Komfort (Haiku)
-12. **"Sag's mir"-Eingabe:** Ein Textfeld mit Tastatur-Diktat. Beispiel: *"Erinner Anna Freitag an den Zahnarzt und setz Milch auf die Einkaufsliste"* → Haiku erzeugt per Tool-Use ein Todo + einen Einkaufslisteneintrag. Vor dem Speichern wird eine Vorschau zur Bestätigung angezeigt.
+### Phase 3 – KI & Komfort
+12. **[vorgezogen und gebaut, 23.11.: Claude Sonnet 5.5 statt Haiku, Edge Function `voice`, Web-Speech-Mikro + Vorschau]** **"Sag's mir"-Eingabe:** Ein Textfeld mit Tastatur-Diktat. Beispiel: *"Erinner Anna Freitag an den Zahnarzt und setz Milch auf die Einkaufsliste"* → Haiku erzeugt per Tool-Use ein Todo + einen Einkaufslisteneintrag. Vor dem Speichern wird eine Vorschau zur Bestätigung angezeigt.
 13. **Rezept aus Link:** URL einfügen → Seite wird serverseitig geladen → Haiku extrahiert Titel, Zutaten, Schritte (viele Rezeptseiten haben zusätzlich strukturierte Daten, die zuerst genutzt werden; Haiku nur als Fallback).
 14. **Vertrag fotografieren/PDF:** Haiku liest Anbieter, Betrag, Laufzeit, Kündigungsfrist und füllt das Formular vor.
 15. **Dokumenten-Safe** (Versicherungsscheine, Garantien) verknüpft mit Verträgen.
