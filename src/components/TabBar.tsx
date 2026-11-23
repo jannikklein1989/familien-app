@@ -28,7 +28,7 @@ export function TabBar({ onMic }: { onMic: () => void }) {
         <Tab t={tabs[0]} />
         <Tab t={tabs[1]} />
         <div className="flex justify-center">
-          <button aria-label="Schnell eintragen" onClick={onMic}
+          <button aria-label="Einsprechen oder eintippen" onClick={onMic}
             className="w-[62px] h-[62px] -mt-8 rounded-full border-4 border-bg bg-lime text-lime-ink flex items-center justify-center shadow-[0_8px_22px_rgba(15,93,76,0.30)]">
             <Icon name="mic" size={26} stroke={2.2} />
           </button>
