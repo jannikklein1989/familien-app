@@ -33,9 +33,9 @@ mal überlastet ist) und liefert To-dos, Einkauf und Rezepte zurück. In der App
 "Speichern" trägt ein. **Der API-Key liegt nur auf dem Server, nie in der App.**
 
 1. Supabase Dashboard → Edge Functions → Secrets: `ANTHROPIC_API_KEY` = dein Key von console.anthropic.com.
-2. Funktion deployen, entweder per CLI `supabase functions deploy voice --project-ref <ref>` oder im Dashboard
-   (Edge Functions → Deploy new function → Name `voice`, Inhalt von `supabase/functions/voice/index.ts` und
-   `interpret.ts`).
+2. Funktion deployen, entweder im Dashboard (Edge Functions → Deploy a new function → Via Editor, Name `voice`,
+   Inhalt von `supabase/functions/voice/index.ts` einfügen, danach unter Details "Verify JWT" ausschalten, die
+   Funktion prüft den Login selbst) oder per CLI `supabase functions deploy voice --no-verify-jwt --project-ref <ref>`.
 3. Fertig. Ohne Supabase (Demo-Modus) nutzt die App einen einfachen lokalen Parser.
 
 Kosten: ca. 4.000 Input- + 300 Output-Tokens pro Eingabe, also rund 0,01 $; 300 Eingaben/Monat ≈ 2 $.
