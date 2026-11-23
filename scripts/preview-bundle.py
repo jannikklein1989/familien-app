@@ -12,7 +12,8 @@ def inline(m):
     return f'url(data:font/woff2;base64,{data})'
 css = re.sub(r'url\(\./([^)]+\.woff2)\)', inline, css)
 js = js.replace('</script', '<\\/script')
-page = f'''<title>KK Home</title>
+page = f'''<meta charset="utf-8">
+<title>KK Home</title>
 <style>{css}</style>
 <div id="root"></div>
 <script type="module">{js}</script>

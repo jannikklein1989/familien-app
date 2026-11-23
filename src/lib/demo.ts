@@ -31,8 +31,8 @@ function seed(): Db {
       { id: uid(), title: 'Zahnarzt-Termin ausmachen', assignee_id: 'u-jannik', due_date: null, recurrence: null, done_at: null, done_by: null, created_at: now },
     ],
     shopping_items: [
-      { id: uid(), name: 'Milch', quantity: '2', category: 'Kühlregal', checked: false, created_at: now },
-      { id: uid(), name: 'Eier', quantity: '10', category: 'Kühlregal', checked: false, created_at: now },
+      { id: uid(), name: 'Milch', quantity: '2×', category: 'Kühlregal', checked: false, created_at: now },
+      { id: uid(), name: 'Eier', quantity: '10×', category: 'Kühlregal', checked: false, created_at: now },
       { id: uid(), name: 'Basilikum', quantity: null, category: 'Obst & Gemüse', checked: false, created_at: now },
       { id: uid(), name: 'Tomaten', quantity: '500 g', category: 'Obst & Gemüse', checked: false, created_at: now },
       { id: uid(), name: 'Spülmittel', quantity: null, category: 'Drogerie', checked: true, created_at: now },

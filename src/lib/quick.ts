@@ -72,3 +72,30 @@ export function guessCategory(name: string): string {
   return CATS.find(([re]) => re.test(name))?.[1] ?? 'Sonstiges'
 }
 export const CATEGORY_ORDER = ['Obst & Gemüse', 'Brot & Backwaren', 'Kühlregal', 'Fleisch & Fisch', 'Vorrat', 'Tiefkühl', 'Getränke', 'Drogerie', 'Sonstiges']
+
+export const UNITS = ['Stück', 'g', 'kg', 'ml', 'l', 'Pck.'] as const
+export type Unit = (typeof UNITS)[number]
+
+/** "500 g" → { amount: 500, unit: 'g' }, "2" → { amount: 2, unit: 'Stück' } */
+export function parseQty(q: string | null | undefined): { amount: number | null; unit: Unit } {
+  if (!q) return { amount: null, unit: 'Stück' }
+  const m = q.trim().match(/^(\d+(?:[.,]\d+)?)\s*(.*)$/)
+  if (!m) return { amount: null, unit: 'Stück' }
+  const raw = m[2].toLowerCase().replace('.', '')
+  const unit = (UNITS.find((u) => u.toLowerCase().replace('.', '') === raw) ??
+    (raw === 'x' || raw === '×' || raw === 'stk' ? 'Stück' : raw === 'pck' || raw === 'packung' ? 'Pck.' : 'Stück')) as Unit
+  return { amount: Number(m[1].replace(',', '.')), unit }
+}
+
+export function formatQty(amount: number | null, unit: Unit): string | null {
+  if (amount == null || Number.isNaN(amount) || amount <= 0) return null
+  const n = amount.toLocaleString('de-DE', { maximumFractionDigits: 2 })
+  return unit === 'Stück' ? `${n}×` : `${n} ${unit}`
+}
+
+/** Sinnvolle Schrittweite für +/- je Einheit */
+export function qtyStep(unit: Unit, amount: number | null): number {
+  if (unit === 'g' || unit === 'ml') return (amount ?? 0) >= 500 ? 250 : 50
+  if (unit === 'kg' || unit === 'l') return 0.5
+  return 1
+}

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { addMonths, cancellationDeadline, iso, nextDue, parse } from './dates'
-import { guessCategory, parseQuick } from './quick'
+import { formatQty, guessCategory, parseQty, parseQuick } from './quick'
 import type { Contract, Profile } from './types'
 
 const now = parse('2026-11-23')
@@ -44,4 +44,17 @@ describe('Schnell-Eingabe', () => {
   it('übermorgen schlägt morgen', () => expect(parseQuick('Erinnere Jannik übermorgen an den Müll', P)).toMatchObject({ assignee_id: 'j', due_date: '2026-11-25' }))
   it('Geschenk ist kein Einkauf', () => expect(parseQuick('Geschenk für Mama besorgen', P)?.kind).toBe('todo'))
   it('Kategorien', () => expect([guessCategory('Mozzarella'), guessCategory('Reis'), guessCategory('Klopapier')]).toEqual(['Kühlregal', 'Vorrat', 'Drogerie']))
+})
+
+describe('Mengen', () => {
+  it('liest Einheiten', () => {
+    expect(parseQty('500 g')).toEqual({ amount: 500, unit: 'g' })
+    expect(parseQty('2×')).toEqual({ amount: 2, unit: 'Stück' })
+    expect(parseQty('1,5 l')).toEqual({ amount: 1.5, unit: 'l' })
+  })
+  it('formatiert', () => {
+    expect(formatQty(3, 'Stück')).toBe('3×')
+    expect(formatQty(1.5, 'kg')).toBe('1,5 kg')
+    expect(formatQty(0, 'g')).toBeNull()
+  })
 })
