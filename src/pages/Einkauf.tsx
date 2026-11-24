@@ -120,7 +120,7 @@ function ItemForm({ item, api, onClose }: { item: ShoppingItem; api: Api; onClos
           <button type="button" aria-label="Mehr" onClick={() => step(1)} className="w-12 h-12 shrink-0 rounded-[14px] bg-card border border-line text-[22px]">+</button>
         </div>
       </Field>
-      <div role="radiogroup" aria-label="Einheit" className="grid grid-cols-6 gap-1.5">
+      <div role="radiogroup" aria-label="Einheit" className="grid grid-cols-4 gap-1.5">
         {UNITS.map((u) => (
           <button type="button" role="radio" aria-checked={unit === u} key={u} onClick={() => setUnit(u)}
             className={`min-h-11 rounded-[12px] border text-[14px] ${unit === u ? 'bg-green text-white border-green' : 'bg-card border-line'}`}>{u}</button>

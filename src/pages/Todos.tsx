@@ -10,10 +10,16 @@ type TodoApi = ReturnType<typeof useTable<'todos'>>
 export function TodoRow({ todo, api, compact, onEdit }: { todo: Todo; api: Pick<TodoApi, 'update'>; compact?: boolean; onEdit?: (t: Todo) => void }) {
   const { me } = useApp()
   const [flash, setFlash] = useState<string | null>(null)
+  const [pending, setPending] = useState(false)
   const overdue = !todo.done_at && todo.due_date && parse(todo.due_date) < today()
 
-  const toggle = async () => {
+  // Abhaken in zwei Schritten: Häkchen setzen, dann bestätigen. Erst danach verschwindet das To-do.
+  const toggle = () => {
     if (todo.done_at) return api.update(todo.id, { done_at: null, done_by: null })
+    setPending((v) => !v)
+  }
+  const confirm = async () => {
+    setPending(false)
     if (todo.recurrence) {
       const nd = nextDue(todo.recurrence, todo.due_date)
       setFlash(`Nächstes Mal: ${shortDate(nd)}`)
@@ -25,11 +31,11 @@ export function TodoRow({ todo, api, compact, onEdit }: { todo: Todo; api: Pick<
 
   return (
     <div className="flex items-center gap-3 min-h-12 border-b border-line-soft last:border-b-0 py-1">
-      <input type="checkbox" checked={!!todo.done_at} onChange={toggle} aria-label={`${todo.title} erledigt`}
+      <input type="checkbox" checked={!!todo.done_at || pending} onChange={toggle} aria-label={`${todo.title} erledigt`}
         className="w-5 h-5 m-0 accent-green shrink-0" />
       <button type="button" onClick={() => onEdit?.(todo)} disabled={!onEdit}
         className="flex-1 min-w-0 text-left bg-transparent border-0 p-0 text-ink disabled:cursor-default">
-        <span className={`text-[15px] flex items-center gap-1.5 ${todo.done_at ? 'line-through text-muted' : ''}`}>
+        <span className={`text-[15px] flex items-center gap-1.5 ${todo.done_at || pending ? 'line-through text-muted' : ''}`}>
           <span className="truncate">{todo.title}</span>
           {todo.recurrence && <Icon name="repeat" size={14} stroke={2.4} className="text-muted shrink-0" label="wiederkehrend" />}
         </span>
@@ -39,7 +45,11 @@ export function TodoRow({ todo, api, compact, onEdit }: { todo: Todo; api: Pick<
           </span>
         )}
       </button>
-      <PersonTag id={todo.assignee_id} />
+      {pending ? (
+        <button type="button" onClick={confirm} className="min-h-10 px-3.5 rounded-full border-0 bg-green text-white text-[14px] font-semibold shrink-0">
+          Erledigt
+        </button>
+      ) : <PersonTag id={todo.assignee_id} />}
     </div>
   )
 }

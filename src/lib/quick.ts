@@ -73,8 +73,9 @@ export function guessCategory(name: string): string {
 }
 export const CATEGORY_ORDER = ['Obst & Gemüse', 'Brot & Backwaren', 'Kühlregal', 'Fleisch & Fisch', 'Vorrat', 'Tiefkühl', 'Getränke', 'Drogerie', 'Sonstiges']
 
-export const UNITS = ['Stück', 'g', 'kg', 'ml', 'l', 'Pck.'] as const
+export const UNITS = ['Stück', 'g', 'kg', 'ml', 'l', 'Pck.', 'Dose', 'Flasche', 'Glas', 'Becher', 'Bund', 'Kiste'] as const
 export type Unit = (typeof UNITS)[number]
+const PLURAL: Partial<Record<Unit, string>> = { Dose: 'Dosen', Flasche: 'Flaschen', Glas: 'Gläser', Kiste: 'Kisten' }
 
 /** "500 g" → { amount: 500, unit: 'g' }, "2" → { amount: 2, unit: 'Stück' } */
 export function parseQty(q: string | null | undefined): { amount: number | null; unit: Unit } {
@@ -82,7 +83,7 @@ export function parseQty(q: string | null | undefined): { amount: number | null;
   const m = q.trim().match(/^(\d+(?:[.,]\d+)?)\s*(.*)$/)
   if (!m) return { amount: null, unit: 'Stück' }
   const raw = m[2].toLowerCase().replace('.', '')
-  const unit = (UNITS.find((u) => u.toLowerCase().replace('.', '') === raw) ??
+  const unit = (UNITS.find((u) => u.toLowerCase().replace('.', '') === raw || PLURAL[u]?.toLowerCase() === raw) ??
     (raw === 'x' || raw === '×' || raw === 'stk' ? 'Stück' : raw === 'pck' || raw === 'packung' ? 'Pck.' : 'Stück')) as Unit
   return { amount: Number(m[1].replace(',', '.')), unit }
 }
@@ -90,7 +91,8 @@ export function parseQty(q: string | null | undefined): { amount: number | null;
 export function formatQty(amount: number | null, unit: Unit): string | null {
   if (amount == null || Number.isNaN(amount) || amount <= 0) return null
   const n = amount.toLocaleString('de-DE', { maximumFractionDigits: 2 })
-  return unit === 'Stück' ? `${n}×` : `${n} ${unit}`
+  if (unit === 'Stück') return `${n}×`
+  return `${n} ${amount !== 1 && PLURAL[unit] ? PLURAL[unit] : unit}`
 }
 
 /** Sinnvolle Schrittweite für +/- je Einheit */

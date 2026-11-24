@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { addMonths, cancellationDeadline, iso, nextDue, parse } from './dates'
+import { addDays, addMonths, cancellationDeadline, iso, nextDue, parse, today } from './dates'
 import { formatQty, guessCategory, parseQty, parseQuick } from './quick'
 import type { Contract, Profile } from './types'
 
@@ -40,8 +40,8 @@ describe('Wiederkehrende To-dos', () => {
 describe('Schnell-Eingabe', () => {
   it('Einkauf', () => expect(parseQuick('Milch und Eier kaufen', P)).toEqual({ kind: 'shopping', items: ['Milch', 'Eier'] }))
   it('Einkauf mit Präfix', () => expect(parseQuick('Einkauf: Tomaten, Basilikum', P)).toEqual({ kind: 'shopping', items: ['Tomaten', 'Basilikum'] }))
-  it('To-do für Irene morgen', () => expect(parseQuick('Irene morgen Zahnarzt anrufen', P)).toEqual({ kind: 'todo', title: 'Zahnarzt anrufen', assignee_id: 'i', due_date: '2026-11-24' }))
-  it('übermorgen schlägt morgen', () => expect(parseQuick('Erinnere Jannik übermorgen an den Müll', P)).toMatchObject({ assignee_id: 'j', due_date: '2026-11-25' }))
+  it('To-do für Irene morgen', () => expect(parseQuick('Irene morgen Zahnarzt anrufen', P)).toEqual({ kind: 'todo', title: 'Zahnarzt anrufen', assignee_id: 'i', due_date: iso(addDays(today(), 1)) }))
+  it('übermorgen schlägt morgen', () => expect(parseQuick('Erinnere Jannik übermorgen an den Müll', P)).toMatchObject({ assignee_id: 'j', due_date: iso(addDays(today(), 2)) }))
   it('Geschenk ist kein Einkauf', () => expect(parseQuick('Geschenk für Mama besorgen', P)?.kind).toBe('todo'))
   it('Kategorien', () => expect([guessCategory('Mozzarella'), guessCategory('Reis'), guessCategory('Klopapier')]).toEqual(['Kühlregal', 'Vorrat', 'Drogerie']))
 })
@@ -56,5 +56,16 @@ describe('Mengen', () => {
     expect(formatQty(3, 'Stück')).toBe('3×')
     expect(formatQty(1.5, 'kg')).toBe('1,5 kg')
     expect(formatQty(0, 'g')).toBeNull()
+  })
+})
+
+describe('Verpackungseinheiten', () => {
+  it('formatiert Plural und liest ihn zurück', () => {
+    expect(formatQty(2, 'Dose')).toBe('2 Dosen')
+    expect(formatQty(1, 'Dose')).toBe('1 Dose')
+    expect(formatQty(4, 'Flasche')).toBe('4 Flaschen')
+    expect(formatQty(500, 'g')).toBe('500 g')
+    expect(parseQty('2 Dosen')).toEqual({ amount: 2, unit: 'Dose' })
+    expect(parseQty('3 Gläser')).toEqual({ amount: 3, unit: 'Glas' })
   })
 })
