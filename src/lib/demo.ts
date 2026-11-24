@@ -45,7 +45,8 @@ function seed(): Db {
     ],
     recipes: [
       { id: uid(), title: 'Ramen', url: null, wished_by: 'u-irene', is_wish: true, is_favorite: false, ingredients: null, created_at: now },
-      { id: uid(), title: 'Lasagne', url: null, wished_by: 'u-jannik', is_wish: false, is_favorite: true, ingredients: 'Lasagneplatten\nHackfleisch\nTomaten\nMozzarella', created_at: now },
+      { id: uid(), title: 'Lasagne', url: null, wished_by: 'u-jannik', is_wish: false, is_favorite: true, ingredients: '250 g Lasagneplatten\n500 g Hackfleisch\n2 Dosen Tomaten\n1 Mozzarella', appliances: ['Backofen'], servings: 4, created_at: now },
+      { id: uid(), title: 'Ofenkartoffeln', url: null, wished_by: null, is_wish: false, is_favorite: false, ingredients: '1 kg Kartoffeln\n2 EL Olivenöl\nRosmarin', steps: 'Kartoffeln vierteln, mit Öl und Rosmarin mischen\n20 Min. bei 200 °C frittieren, nach 10 Min. schütteln', appliances: ['Heißluftfritteuse'], servings: 2, created_at: now },
     ],
   }
 }

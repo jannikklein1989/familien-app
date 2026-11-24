@@ -66,7 +66,14 @@ export function Sheet({ open, onClose, title, children }: { open: boolean; onClo
   )
 }
 
-export function Field({ label, children }: { label: string; children: ReactNode }) {
+/** group: für Knopf-Gruppen. Ein <label> um mehrere Knöpfe würde beim Tippen auf den Text den ersten Knopf auslösen. */
+export function Field({ label, children, group }: { label: string; children: ReactNode; group?: boolean }) {
+  if (group) return (
+    <div role="group" aria-label={label} className="flex flex-col gap-1.5">
+      <span className="label">{label}</span>
+      {children}
+    </div>
+  )
   return (
     <label className="flex flex-col gap-1.5">
       <span className="label">{label}</span>

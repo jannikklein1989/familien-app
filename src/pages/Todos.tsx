@@ -152,7 +152,7 @@ function TodoForm({ initial, defaultAssignee, onClose, api }: { initial: Todo | 
   return (
     <form onSubmit={(e) => { e.preventDefault(); if (title.trim()) save() }} className="flex flex-col gap-4">
       <Field label="Was?"><input autoFocus value={title} onChange={(e) => setTitle(e.target.value)} className={inputCls} placeholder="z. B. Müll rausstellen" /></Field>
-      <Field label="Wer?"><PersonPicker value={assignee} onChange={setAssignee} /></Field>
+      <Field group label="Wer?"><PersonPicker value={assignee} onChange={setAssignee} /></Field>
       <Field label="Fällig"><input type="date" value={due} onChange={(e) => setDue(e.target.value)} className={inputCls} /></Field>
       <Field label="Wiederholen">
         <div className="grid grid-cols-5 gap-1.5">

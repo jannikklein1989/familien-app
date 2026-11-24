@@ -101,3 +101,27 @@ export function qtyStep(unit: Unit, amount: number | null): number {
   if (unit === 'kg' || unit === 'l') return 0.5
   return 1
 }
+
+/** Geräte für den Geräte-Reiter; eigene lassen sich ergänzen */
+export const APPLIANCES = ['Thermomix', 'Heißluftfritteuse', 'Backofen', 'Herd', 'Grill', 'Slow Cooker', 'Schnellkochtopf', 'Mikrowelle'] as const
+
+const ING_UNITS: Record<string, Unit> = {
+  g: 'g', gr: 'g', gramm: 'g', kg: 'kg', ml: 'ml', l: 'l', liter: 'l',
+  stück: 'Stück', stk: 'Stück', x: 'Stück', pck: 'Pck.', 'pck.': 'Pck.', packung: 'Pck.', päckchen: 'Pck.',
+  dose: 'Dose', dosen: 'Dose', flasche: 'Flasche', flaschen: 'Flasche', glas: 'Glas', gläser: 'Glas',
+  becher: 'Becher', bund: 'Bund', kiste: 'Kiste', kisten: 'Kiste',
+}
+
+/** Zutatenzeile → Einkaufsartikel. "500 g Hackfleisch" → { name: 'Hackfleisch', quantity: '500 g' }.
+ *  Küchenmaße (EL, TL, Prise) sind fürs Einkaufen egal und fallen weg. */
+export function ingredientToItem(line: string): { name: string; quantity: string | null } {
+  const m = line.trim().match(/^(\d+(?:[.,]\d+)?|½|¼)\s*(\S+\.?)?\s+(.+)$/)
+  if (!m) return { name: line.trim(), quantity: null }
+  const amount = m[1] === '½' ? 0.5 : m[1] === '¼' ? 0.25 : Number(m[1].replace(',', '.'))
+  const word = (m[2] ?? '').toLowerCase()
+  if (ING_UNITS[word]) return { name: m[3].trim(), quantity: formatQty(amount, ING_UNITS[word]) }
+  if (/^(el|tl|prise|prisen|msp\.?|zehe|zehen|scheibe|scheiben|handvoll|schuss|spritzer)$/.test(word)) return { name: m[3].trim(), quantity: null }
+  // keine Einheit: "2 Zwiebeln"
+  const rest = `${m[2] ?? ''} ${m[3]}`.trim()
+  return { name: rest, quantity: formatQty(amount, 'Stück') }
+}

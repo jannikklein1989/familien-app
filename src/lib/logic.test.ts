@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { addDays, addMonths, cancellationDeadline, iso, nextDue, parse, today } from './dates'
-import { formatQty, guessCategory, parseQty, parseQuick } from './quick'
+import { formatQty, guessCategory, ingredientToItem, parseQty, parseQuick } from './quick'
 import type { Contract, Profile } from './types'
 
 const now = parse('2026-11-23')
@@ -67,5 +67,15 @@ describe('Verpackungseinheiten', () => {
     expect(formatQty(500, 'g')).toBe('500 g')
     expect(parseQty('2 Dosen')).toEqual({ amount: 2, unit: 'Dose' })
     expect(parseQty('3 Gläser')).toEqual({ amount: 3, unit: 'Glas' })
+  })
+})
+
+describe('Zutat → Einkauf', () => {
+  it('trennt Menge und Name', () => {
+    expect(ingredientToItem('500 g Hackfleisch')).toEqual({ name: 'Hackfleisch', quantity: '500 g' })
+    expect(ingredientToItem('2 Dosen Tomaten')).toEqual({ name: 'Tomaten', quantity: '2 Dosen' })
+    expect(ingredientToItem('2 Zwiebeln')).toEqual({ name: 'Zwiebeln', quantity: '2×' })
+    expect(ingredientToItem('2 EL Olivenöl')).toEqual({ name: 'Olivenöl', quantity: null })
+    expect(ingredientToItem('Rosmarin')).toEqual({ name: 'Rosmarin', quantity: null })
   })
 })

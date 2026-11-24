@@ -40,6 +40,12 @@ mal überlastet ist) und liefert To-dos, Einkauf und Rezepte zurück. In der App
 
 Kosten: ca. 4.000 Input- + 300 Output-Tokens pro Eingabe, also rund 0,01 $; 300 Eingaben/Monat ≈ 2 $.
 
+## Rezept-Import (Claude Sonnet)
+
+Essen → Funken-Knopf: Link, Text, PDF oder Foto → Edge Function `recipe-import` → Vorschau → speichern.
+Einmalig: `supabase/migrations/0002_recipes_import.sql` im SQL-Editor ausführen und die Funktion wie `voice`
+deployen (Name `recipe-import`, Verify JWT aus). Kosten ca. 1–3 Cent pro Rezept.
+
 ## Struktur
 
 - `src/lib/dates.ts` – Kündigungsfristen, Wiederholungen, Datumshelfer

@@ -132,7 +132,7 @@ function ContractForm({ initial, api, onClose }: { initial: Contract | null; api
       <Field label="Kategorie">
         <select value={f.category} onChange={(e) => set('category', e.target.value)} className={inputCls}>{CATEGORIES.map((c) => <option key={c}>{c}</option>)}</select>
       </Field>
-      <Field label="Gehört zu"><PersonPicker value={f.owner_id ?? null} onChange={(v) => set('owner_id', v)} /></Field>
+      <Field group label="Gehört zu"><PersonPicker value={f.owner_id ?? null} onChange={(v) => set('owner_id', v)} /></Field>
 
       {f.direction === 'expense' && (
         <>

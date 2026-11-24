@@ -65,7 +65,10 @@ export interface Recipe {
   wished_by: string | null
   is_wish: boolean
   is_favorite: boolean
-  ingredients?: string | null
+  ingredients?: string | null // eine Zutat pro Zeile, z. B. "500 g Hackfleisch"
+  steps?: string | null // ein Schritt pro Zeile
+  servings?: number | null
+  appliances?: string[]
   notes?: string | null
   created_at: string
 }
