@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { normalizeAppliance } from './quick'
 import type { Recipe } from './types'
 
 export interface ImportedRecipe {
@@ -15,7 +16,7 @@ export type RecipeDraft = Pick<Recipe, 'title' | 'url' | 'ingredients' | 'steps'
 
 export function toDraft(r: ImportedRecipe): RecipeDraft {
   return {
-    title: r.title, url: r.url, servings: r.servings, appliances: r.appliances, notes: r.notes,
+    title: r.title, url: r.url, servings: r.servings, appliances: [...new Set(r.appliances.map(normalizeAppliance))], notes: r.notes,
     ingredients: r.ingredients.join('\n') || null, steps: r.steps.join('\n') || null,
   }
 }
@@ -39,17 +40,46 @@ export async function fileToPayload(file: File): Promise<{ data: string; media_t
   return { data: btoa(bin), media_type: 'application/pdf' }
 }
 
+async function invoke<T>(body: Record<string, unknown>): Promise<T> {
+  const { data, error } = await supabase!.functions.invoke('recipe-import', { body })
+  if (error) {
+    const ctx = (error as { context?: Response }).context
+    const msg = ctx ? await ctx.json().then((j: { error?: string }) => j.error).catch(() => null) : null
+    throw new Error(msg ?? error.message)
+  }
+  return data as T
+}
+
+export interface MealIdea {
+  title: string
+  teaser: string
+  minutes: number | null
+  servings: number | null
+  appliances: string[]
+  ingredients: string[]
+  steps: string[]
+}
+
+/** Neue Gerichtsideen von Claude, passend zu euren Geräten und ohne Doppelungen zur Bibliothek */
+export async function fetchIdeas(input: { wish?: string; appliance?: string | null; known: string[] }): Promise<MealIdea[]> {
+  if (supabase) {
+    const res = await invoke<{ ideas: MealIdea[] }>({ mode: 'ideas', wish: input.wish ?? '', appliance: input.appliance ?? null, known: input.known.slice(0, 300) })
+    return res.ideas.map((i) => ({ ...i, appliances: [...new Set(i.appliances.map(normalizeAppliance))] }))
+  }
+  // Demo ohne KI: feste Beispiele
+  await new Promise((r) => setTimeout(r, 600))
+  return [
+    { title: 'Gnocchi-Pfanne mit Spinat', teaser: 'Cremig, in 20 Minuten fertig, ein Topf.', minutes: 20, servings: 2, appliances: ['Herd'], ingredients: ['500 g Gnocchi', '200 g Babyspinat', '150 g Frischkäse', '1 Zwiebel', '50 g Parmesan'], steps: ['Gnocchi in Öl goldbraun braten', 'Zwiebel dazu, kurz mitbraten', 'Frischkäse und Spinat unterrühren, mit Parmesan servieren'] },
+    { title: 'Airfryer-Lachs mit Honig-Senf', teaser: 'Außen knusprig, innen saftig, kaum Abwasch.', minutes: 15, servings: 2, appliances: ['Airfryer'], ingredients: ['2 Lachsfilets', '1 EL Honig', '1 EL Senf', '1 Zitrone'], steps: ['Honig und Senf verrühren, Lachs bestreichen', '10 Min. bei 200 °C garen'] },
+    { title: 'Cookie-Dough-Eis', teaser: 'Für die Ninja Creami, mit Skyr statt Sahne.', minutes: 10, servings: 2, appliances: ['Ninja Creami'], ingredients: ['500 g Skyr', '100 ml Milch', '2 EL Ahornsirup', '50 g Schokodrops'], steps: ['Skyr, Milch und Sirup verrühren, 24 Std. einfrieren', 'Lite Ice Cream, Drops per Mix-in dazu'] },
+  ].filter((i) => !input.appliance || i.appliances.includes(input.appliance))
+}
+
 export async function importRecipe(input: { text?: string; file?: File }): Promise<ImportedRecipe> {
   const text = input.text?.trim() ?? ''
   if (supabase) {
     const file = input.file ? await fileToPayload(input.file) : undefined
-    const { data, error } = await supabase.functions.invoke('recipe-import', { body: { text, file } })
-    if (error) {
-      const ctx = (error as { context?: Response }).context
-      const msg = ctx ? await ctx.json().then((j: { error?: string }) => j.error).catch(() => null) : null
-      throw new Error(msg ?? error.message)
-    }
-    return data as ImportedRecipe
+    return await invoke<ImportedRecipe>({ text, file })
   }
   // Demo ohne KI: erste Zeile = Titel, Rest = Zutaten
   if (input.file) throw new Error('Datei-Import geht nur mit Supabase und Claude.')

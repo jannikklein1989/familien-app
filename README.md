@@ -46,11 +46,23 @@ Essen → Funken-Knopf: Link, Text, PDF oder Foto → Edge Function `recipe-impo
 Einmalig: `supabase/migrations/0002_recipes_import.sql` im SQL-Editor ausführen und die Funktion wie `voice`
 deployen (Name `recipe-import`, Verify JWT aus). Kosten ca. 1–3 Cent pro Rezept.
 
+## Wochenplan, Fotos, „Was kochen wir heute?“
+
+- **Wochenplan** (Essen → Wochenplan): Gerichte auf Tage legen, „Einkaufsliste erstellen“ fasst alle Zutaten
+  der offenen Gerichte zusammen (500 g + 600 g Hack = 1,1 kg), Vorrat wie Salz/Öl/EL-Mengen ist vorab abgewählt.
+- **Ein Foto pro Gericht** im privaten Storage-Bucket `recipe-photos` (Ordner = Haushalt, per RLS geschützt).
+- **Geräte**: Thermomix, Airfryer, Ninja Creami, Herd, Backofen u. a., filterbar; der Import schlägt das Gerät vor.
+- **Vorschläge** aus der eigenen Sammlung (lange nicht gekocht + Favoriten zuerst), „Neue Ideen“ fragt Claude
+  über dieselbe Function `recipe-import` (`mode: 'ideas'`), ca. 2–4 Cent pro Klick.
+
+Einmalig: `supabase/migrations/0004_wochenplan_fotos.sql` im SQL-Editor ausführen und `recipe-import` neu deployen.
+
 ## Struktur
 
 - `src/lib/dates.ts` – Kündigungsfristen, Wiederholungen, Datumshelfer
 - `src/lib/quick.ts` – Mengen/Einheiten, Kategorien, lokaler Parser für den Demo-Modus
 - `src/lib/voice.ts` + `supabase/functions/voice` – Sprachmodus mit Claude Sonnet
+- `src/lib/mealplan.ts` – Wochenplan: Zutaten zusammenfassen, Vorschläge, Fotos verkleinern
 - `src/lib/demo.ts` / `supabase.ts` – zwei Backends hinter einer Schnittstelle
 - `src/pages/*` – Screens
 - `supabase/migrations` – Schema inkl. Row-Level-Security

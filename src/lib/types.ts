@@ -31,6 +31,7 @@ export interface ShoppingItem {
   quantity?: string | null
   category: string
   checked: boolean
+  source_recipe_id?: string | null
   created_at: string
 }
 
@@ -70,6 +71,16 @@ export interface Recipe {
   servings?: number | null
   appliances?: string[]
   notes?: string | null
+  photo_path?: string | null // Storage-Pfad (Supabase) bzw. Data-URL (Demo)
+  last_cooked_at?: string | null
+  created_at: string
+}
+
+export interface MealPlanEntry {
+  id: string
+  day: string // YYYY-MM-DD
+  recipe_id: string
+  on_list: boolean
   created_at: string
 }
 
@@ -78,5 +89,6 @@ export interface Tables {
   shopping_items: ShoppingItem
   contracts: Contract
   recipes: Recipe
+  meal_plan: MealPlanEntry
 }
 export type TableName = keyof Tables

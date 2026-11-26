@@ -11,6 +11,9 @@ export const missingEnv = [!url && 'VITE_SUPABASE_URL', !key && 'VITE_SUPABASE_A
 
 export const supabase: SupabaseClient | null = url && key ? createClient(url, key) : null
 
+const PHOTO_BUCKET = 'recipe-photos'
+const urlCache = new Map<string, string>()
+
 export function createSupabaseBackend(sb: SupabaseClient): Backend {
   const fail = (error: { message: string } | null) => {
     if (error) throw new Error(error.message)
@@ -49,6 +52,26 @@ export function createSupabaseBackend(sb: SupabaseClient): Backend {
       const { data, error } = await sb.from('profiles').select('id, display_name, color')
       fail(error)
       return (data ?? []) as Profile[]
+    },
+    async uploadPhoto(recipeId, blob) {
+      const { data: { user } } = await sb.auth.getUser()
+      const { data: prof, error: e1 } = await sb.from('profiles').select('household_id').eq('id', user?.id ?? '').single()
+      fail(e1)
+      const path = `${prof!.household_id}/${recipeId}-${Date.now()}.jpg`
+      const { error } = await sb.storage.from(PHOTO_BUCKET).upload(path, blob, { contentType: 'image/jpeg', upsert: false })
+      fail(error)
+      return path
+    },
+    async removePhoto(ref) {
+      await sb.storage.from(PHOTO_BUCKET).remove([ref])
+    },
+    async photoUrls(refs) {
+      const missing = refs.filter((r) => !urlCache.has(r))
+      if (missing.length) {
+        const { data } = await sb.storage.from(PHOTO_BUCKET).createSignedUrls(missing, 60 * 60 * 24 * 7)
+        for (const d of data ?? []) if (d.path && d.signedUrl) urlCache.set(d.path, d.signedUrl)
+      }
+      return Object.fromEntries(refs.filter((r) => urlCache.has(r)).map((r) => [r, urlCache.get(r)!]))
     },
   }
 }

@@ -23,6 +23,7 @@ function seed(): Db {
   const t = today()
   const now = new Date().toISOString()
   const d = (n: number) => iso(addDays(t, n))
+  const r = { lasagne: uid(), kartoffeln: uid(), chili: uid(), creami: uid(), haehnchen: uid() }
   return {
     todos: [
       { id: uid(), title: 'Müll rausstellen', assignee_id: 'u-jannik', due_date: d(0), recurrence: { freq: 'weekly', interval: 2, mode: 'fixed' }, done_at: null, done_by: null, created_at: now },
@@ -45,8 +46,16 @@ function seed(): Db {
     ],
     recipes: [
       { id: uid(), title: 'Ramen', url: null, wished_by: 'u-irene', is_wish: true, is_favorite: false, ingredients: null, created_at: now },
-      { id: uid(), title: 'Lasagne', url: null, wished_by: 'u-jannik', is_wish: false, is_favorite: true, ingredients: '250 g Lasagneplatten\n500 g Hackfleisch\n2 Dosen Tomaten\n1 Mozzarella', appliances: ['Backofen'], servings: 4, created_at: now },
-      { id: uid(), title: 'Ofenkartoffeln', url: null, wished_by: null, is_wish: false, is_favorite: false, ingredients: '1 kg Kartoffeln\n2 EL Olivenöl\nRosmarin', steps: 'Kartoffeln vierteln, mit Öl und Rosmarin mischen\n20 Min. bei 200 °C frittieren, nach 10 Min. schütteln', appliances: ['Heißluftfritteuse'], servings: 2, created_at: now },
+      { id: r.lasagne, title: 'Lasagne', url: null, wished_by: 'u-jannik', is_wish: false, is_favorite: true, ingredients: '250 g Lasagneplatten\n500 g Hackfleisch\n2 Dosen Tomaten\n1 Mozzarella\n2 Zwiebeln', appliances: ['Backofen'], servings: 4, last_cooked_at: d(-30), created_at: now },
+      { id: r.kartoffeln, title: 'Ofenkartoffeln', url: null, wished_by: null, is_wish: false, is_favorite: false, ingredients: '1 kg Kartoffeln\n2 EL Olivenöl\nRosmarin\nSalz', steps: 'Kartoffeln vierteln, mit Öl und Rosmarin mischen\n20 Min. bei 200 °C frittieren, nach 10 Min. schütteln', appliances: ['Airfryer'], servings: 2, last_cooked_at: d(-5), created_at: now },
+      { id: r.chili, title: 'Chili con Carne', url: null, wished_by: null, is_wish: false, is_favorite: true, ingredients: '500 g Hackfleisch\n1 Dose Kidneybohnen\n1 Dose Mais\n1 Zwiebel\n2 Dosen Tomaten\n1 TL Chili', steps: 'Zwiebel 5 Sek./Stufe 5 zerkleinern\nHack zugeben, 8 Min./120 °C/Linkslauf\nRest zugeben, 20 Min./100 °C/Linkslauf', appliances: ['Thermomix'], servings: 4, created_at: now },
+      { id: r.creami, title: 'Erdbeer-Protein-Eis', url: null, wished_by: null, is_wish: false, is_favorite: false, ingredients: '300 g Erdbeeren\n250 ml Milch\n1 Becher Skyr', steps: 'Alles pürieren, in den Becher füllen\n24 Std. einfrieren\nProgramm Lite Ice Cream, einmal Re-spin', appliances: ['Ninja Creami'], servings: 2, created_at: now },
+      { id: r.haehnchen, title: 'Knusper-Hähnchen', url: null, wished_by: null, is_wish: false, is_favorite: false, ingredients: '600 g Hähnchenbrust\n100 g Cornflakes\n2 Eier\n1 EL Paprikapulver', steps: 'Hähnchen in Streifen schneiden\nErst durch Ei, dann durch zerbröselte Cornflakes ziehen\n12 Min. bei 190 °C, einmal wenden', appliances: ['Airfryer'], servings: 3, last_cooked_at: d(-21), created_at: now },
+    ],
+    meal_plan: [
+      { id: uid(), day: d(0), recipe_id: r.chili, on_list: true, created_at: now },
+      { id: uid(), day: d(2), recipe_id: r.haehnchen, on_list: false, created_at: now },
+      { id: uid(), day: d(4), recipe_id: r.lasagne, on_list: false, created_at: now },
     ],
   }
 }
@@ -54,7 +63,7 @@ function seed(): Db {
 function load(): Db {
   try {
     const raw = localStorage.getItem(KEY)
-    if (raw) return JSON.parse(raw)
+    if (raw) return { meal_plan: [], ...JSON.parse(raw) } // ältere Demo-Daten ohne Wochenplan
   } catch { /* privater Modus o. ä. */ }
   const db = seed()
   save(db)
@@ -110,6 +119,19 @@ export function createDemoBackend(): Backend {
     },
     async profiles() {
       return DEMO_PROFILES
+    },
+    // Demo: Foto als Data-URL direkt in photo_path (klein gerechnet, liegt im localStorage)
+    async uploadPhoto(_id, blob) {
+      return await new Promise<string>((res, rej) => {
+        const fr = new FileReader()
+        fr.onload = () => res(fr.result as string)
+        fr.onerror = () => rej(new Error('Foto konnte nicht gelesen werden.'))
+        fr.readAsDataURL(blob)
+      })
+    },
+    async removePhoto() {},
+    async photoUrls(refs) {
+      return Object.fromEntries(refs.map((r) => [r, r]))
     },
   }
 }
