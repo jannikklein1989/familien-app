@@ -4,6 +4,7 @@ import type { Session } from '@supabase/supabase-js'
 import { AppProvider } from './lib/app'
 import { supabase } from './lib/supabase'
 import type { Profile } from './lib/types'
+import Kalender from './pages/Kalender'
 import { TabBar } from './components/TabBar'
 import { QuickAdd } from './components/QuickAdd'
 import Heute from './pages/Heute'
@@ -29,6 +30,7 @@ function Shell() {
           <Route path="/essen" element={<Essen />} />
           <Route path="/mehr" element={<Mehr />} />
           <Route path="/vertraege" element={<Vertraege />} />
+          <Route path="/kalender" element={<Kalender />} />
         </Routes>
       </main>
       <TabBar onMic={() => setQuick(true)} />

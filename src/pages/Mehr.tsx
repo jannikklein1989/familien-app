@@ -7,7 +7,7 @@ import { Card, IconChip, PageHeader, type ChipColor } from '../components/ui'
 
 const ITEMS: { to?: string; label: string; sub: string; icon: IconName; color: ChipColor; soon?: boolean }[] = [
   { to: '/vertraege', label: 'Verträge & Fixkosten', sub: 'Abos, Fristen, Kündigungslinks', icon: 'wallet', color: 'lime' },
-  { label: 'Kalender', sub: 'Google Kalender von euch beiden', icon: 'calendar', color: 'blue', soon: true },
+  { to: '/kalender', label: 'Kalender', sub: 'Google Kalender von euch beiden', icon: 'calendar', color: 'blue' },
   { label: 'Ärzte', sub: 'Wer hat welchen Arzt, Vorsorge', icon: 'heart', color: 'pink', soon: true },
   { label: 'Geburtstage & Geschenke', sub: 'Erinnerung und Ideenliste', icon: 'gift', color: 'violet', soon: true },
   { label: 'Notfallkontakte', sub: 'Schnell anrufen', icon: 'phone', color: 'coral', soon: true },
