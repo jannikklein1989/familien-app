@@ -11,4 +11,9 @@ export interface Backend {
   /** Meldet Änderungen (auch vom anderen Handy). Rückgabe: abmelden */
   subscribe(table: TableName, cb: () => void): () => void
   profiles(): Promise<Profile[]>
+  /** Foto speichern, Rückgabe: Referenz für recipes.photo_path */
+  uploadPhoto(recipeId: string, blob: Blob): Promise<string>
+  removePhoto(ref: string): Promise<void>
+  /** Anzeigbare URLs zu Foto-Referenzen */
+  photoUrls(refs: string[]): Promise<Record<string, string>>
 }

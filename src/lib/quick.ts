@@ -103,7 +103,16 @@ export function qtyStep(unit: Unit, amount: number | null): number {
 }
 
 /** Geräte für den Geräte-Reiter; eigene lassen sich ergänzen */
-export const APPLIANCES = ['Thermomix', 'Heißluftfritteuse', 'Backofen', 'Herd', 'Grill', 'Slow Cooker', 'Schnellkochtopf', 'Mikrowelle'] as const
+export const APPLIANCES = ['Thermomix', 'Airfryer', 'Ninja Creami', 'Herd', 'Backofen', 'Grill', 'Slow Cooker', 'Schnellkochtopf', 'Mikrowelle'] as const
+/** Alte bzw. andere Schreibweisen auf die festen Namen bringen */
+export function normalizeAppliance(a: string): string {
+  const k = a.trim().toLowerCase()
+  if (/heißluft|heissluft|air ?fryer/.test(k)) return 'Airfryer'
+  if (/creami/.test(k)) return 'Ninja Creami'
+  if (/thermomix|tm ?[5-7]\b/.test(k)) return 'Thermomix'
+  if (/^(ofen|backofen)$/.test(k)) return 'Backofen'
+  return a.trim()
+}
 
 const ING_UNITS: Record<string, Unit> = {
   g: 'g', gr: 'g', gramm: 'g', kg: 'kg', ml: 'ml', l: 'l', liter: 'l',
