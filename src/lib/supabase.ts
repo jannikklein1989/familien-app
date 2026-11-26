@@ -2,8 +2,12 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import type { Backend } from './backend'
 import type { Profile } from './types'
 
-const url = import.meta.env.VITE_SUPABASE_URL as string | undefined
-const key = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
+// Leerzeichen/Zeilenumbrüche beim Einfügen in Vercel abfangen, beide Key-Namen erlauben
+const env = import.meta.env as Record<string, string | undefined>
+const url = env.VITE_SUPABASE_URL?.trim().replace(/\/+$/, '')
+const key = (env.VITE_SUPABASE_ANON_KEY ?? env.VITE_SUPABASE_PUBLISHABLE_KEY)?.trim()
+/** Welche Variablen beim Bauen gefehlt haben (für den Warnhinweis) */
+export const missingEnv = [!url && 'VITE_SUPABASE_URL', !key && 'VITE_SUPABASE_ANON_KEY'].filter(Boolean) as string[]
 
 export const supabase: SupabaseClient | null = url && key ? createClient(url, key) : null
 

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { HashRouter, MemoryRouter, Route, Routes } from 'react-router-dom'
 import type { Session } from '@supabase/supabase-js'
 import { AppProvider } from './lib/app'
-import { supabase } from './lib/supabase'
+import { missingEnv, supabase } from './lib/supabase'
 import type { Profile } from './lib/types'
 import Kalender from './pages/Kalender'
 import { TabBar } from './components/TabBar'
@@ -22,6 +22,11 @@ function Shell() {
   const [quick, setQuick] = useState(false)
   return (
     <Router>
+      {!supabase && import.meta.env.PROD && import.meta.env.VITE_PREVIEW !== '1' && (
+        <div role="alert" className="bg-alert text-white text-[13px] px-4 py-2.5 text-center">
+          Nicht mit Supabase verbunden, die App läuft im Demo-Modus ohne KI. In Vercel fehlt: {missingEnv.join(', ')}. Danach neu deployen.
+        </div>
+      )}
       <main className="max-w-[520px] mx-auto px-[18px] pb-safe">
         <Routes>
           <Route path="/" element={<Heute />} />
