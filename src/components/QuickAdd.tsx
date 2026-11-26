@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useApp } from '../lib/app'
-import { relDay, recurrenceLabel } from '../lib/dates'
+import { recurrenceLabel, relDay, shortDate } from '../lib/dates'
 import { formatQty } from '../lib/quick'
-import { applyVoice, understand, type Selection, type VoiceResult } from '../lib/voice'
+import { applyVoice, monthsFromNow, understand, type Selection, type VoiceResult } from '../lib/voice'
 import { Icon } from './Icon'
 import { PrimaryButton, Sheet, inputCls } from './ui'
 import { useSpeech } from './useSpeech'
@@ -13,7 +13,7 @@ export function QuickAdd({ open, onClose }: { open: boolean; onClose: () => void
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<VoiceResult | null>(null)
-  const [sel, setSel] = useState<Selection>({ todos: [], shopping: [], recipes: [] })
+  const [sel, setSel] = useState<Selection>({ todos: [], shopping: [], recipes: [], contracts: [] })
   const [done, setDone] = useState<string | null>(null)
   const speech = useSpeech((t) => setText((prev) => (prev ? `${prev} ${t}` : t)))
 
@@ -26,11 +26,23 @@ export function QuickAdd({ open, onClose }: { open: boolean; onClose: () => void
     try {
       const r = await understand(text.trim(), profiles, me)
       setResult(r)
-      setSel({ todos: r.todos.map(() => true), shopping: r.shopping.map(() => true), recipes: r.recipes.map(() => true) })
+      setSel({ todos: r.todos.map(() => true), shopping: r.shopping.map(() => true), recipes: r.recipes.map(() => true), contracts: (r.contracts ?? []).map(() => true) })
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Das hat nicht geklappt.')
     } finally { setBusy(false) }
   }
+
+  // Ein Tipp aufs Mikro reicht: Aufnahme startet sofort, nach dem Stoppen versteht Claude automatisch
+  useEffect(() => {
+    if (open && speech.supported) speech.start()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open])
+  const wasListening = useRef(false)
+  useEffect(() => {
+    if (wasListening.current && !speech.listening && text.trim() && !result && !busy) go()
+    wasListening.current = speech.listening
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [speech.listening])
 
   const save = async () => {
     if (!result) return
@@ -46,12 +58,31 @@ export function QuickAdd({ open, onClose }: { open: boolean; onClose: () => void
   }
 
   const toggle = (k: keyof Selection, i: number) => setSel((s) => ({ ...s, [k]: s[k].map((v, j) => (j === i ? !v : v)) }))
-  const count = result ? [...sel.todos, ...sel.shopping, ...sel.recipes].filter(Boolean).length : 0
+  const count = result ? [...sel.todos, ...sel.shopping, ...sel.recipes, ...sel.contracts].filter(Boolean).length : 0
   const who = (name: string | null) => name ?? 'Beide'
 
   return (
     <Sheet open={open} onClose={close} title="Sag's mir">
-      {!result ? (
+      {speech.listening ? (
+        <div className="flex flex-col items-center gap-5 py-2" aria-live="polite">
+          <div className="label flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-alert animate-pulse" /> Ich höre zu</div>
+          <p className="m-0 w-full min-h-[120px] text-[20px] leading-snug text-ink">
+            {text}{' '}<span className="text-muted">{speech.interim}</span>
+            {!text && !speech.interim && <span className="text-muted">Sprich einfach los, z. B. „Dachrinne reinigen für Jannik, 500 g Hack und 2 Packungen Magerquark“</span>}
+          </p>
+          <button type="button" onClick={speech.stop} aria-label="Fertig, auswerten"
+            className="w-20 h-20 rounded-full border-0 bg-alert text-white flex items-center justify-center shadow-lg">
+            <span className="w-7 h-7 rounded-[6px] bg-white" />
+          </button>
+          <span className="text-[13px] text-muted">Tippen, wenn du fertig bist</span>
+        </div>
+      ) : busy && !result ? (
+        <div className="flex flex-col items-center gap-3 py-8" role="status">
+          <Icon name="sparkle" size={32} className="text-green animate-pulse" />
+          <p className="m-0 text-[16px] font-semibold">Claude sortiert …</p>
+          <p className="m-0 text-[14px] text-muted text-center px-4">„{text.length > 140 ? text.slice(0, 140) + ' …' : text}“</p>
+        </div>
+      ) : !result ? (
         <form onSubmit={(e) => { e.preventDefault(); if (text.trim()) go() }} className="flex flex-col gap-3">
           <div className="relative">
             <textarea rows={4} value={speech.interim ? `${text} ${speech.interim}`.trim() : text} onChange={(e) => setText(e.target.value)}
@@ -68,7 +99,7 @@ export function QuickAdd({ open, onClose }: { open: boolean; onClose: () => void
           <p className="m-0 text-[13px] text-muted flex items-start gap-1.5">
             <Icon name="sparkle" size={16} className="shrink-0 mt-0.5" />
             {backend.mode === 'supabase'
-              ? 'Sprich ruhig alles auf einmal. Claude sortiert es in To-dos, Einkauf und Rezepte, du bestätigst vor dem Speichern.'
+              ? 'Sprich ruhig alles auf einmal. Claude sortiert es in To-dos, Einkauf, Essen und Verträge, du bestätigst vor dem Speichern.'
               : 'Demo ohne KI: erkennt nur einfache Sätze. Mit Supabase übernimmt Claude.'}
             {!speech.supported && ' Tipp aufs Mikro deiner Tastatur zum Diktieren.'}
           </p>
@@ -103,7 +134,19 @@ export function QuickAdd({ open, onClose }: { open: boolean; onClose: () => void
               ))}
             </Group>
           )}
-          {count === 0 && result.todos.length + result.shopping.length + result.recipes.length === 0 && <p className="m-0 text-muted">Ich habe nichts zum Eintragen gefunden.</p>}
+          {!!result.contracts?.length && (
+            <Group icon="wallet" title="Verträge & Abos">
+              {result.contracts.map((c, i) => (
+                <Item key={i} checked={sel.contracts[i]} onToggle={() => toggle('contracts', i)} title={c.name}
+                  sub={[
+                    `${c.amount.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })} ${c.interval === 'monthly' ? 'im Monat' : c.interval === 'yearly' ? 'im Jahr' : 'im Quartal'}`,
+                    c.min_term_months ? `Laufzeit ${c.min_term_months} Mon.` : '',
+                    c.reminder_date ? `Erinnerung ${shortDate(c.reminder_date)} (in ${monthsFromNow(c.reminder_date)} Mon.)` : '',
+                  ].filter(Boolean).join(' · ')} />
+              ))}
+            </Group>
+          )}
+          {count === 0 && result.todos.length + result.shopping.length + result.recipes.length + (result.contracts?.length ?? 0) === 0 && <p className="m-0 text-muted">Ich habe nichts zum Eintragen gefunden.</p>}
           {error && <p role="alert" className="m-0 text-[14px] text-alert">{error}</p>}
           <PrimaryButton onClick={save} disabled={busy || count === 0}>{count === 1 ? '1 Eintrag speichern' : `${count} Einträge speichern`}</PrimaryButton>
           <button onClick={() => setResult(null)} className="min-h-11 bg-transparent border-0 text-[14px] text-muted">Zurück und Text ändern</button>
@@ -113,7 +156,7 @@ export function QuickAdd({ open, onClose }: { open: boolean; onClose: () => void
   )
 }
 
-function Group({ icon, title, children }: { icon: 'check' | 'cart' | 'bowl'; title: string; children: React.ReactNode }) {
+function Group({ icon, title, children }: { icon: 'check' | 'cart' | 'bowl' | 'wallet'; title: string; children: React.ReactNode }) {
   return (
     <section>
       <h3 className="label m-0 mb-2 flex items-center gap-1.5"><Icon name={icon} size={14} /> {title}</h3>

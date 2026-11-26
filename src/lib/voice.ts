@@ -1,5 +1,5 @@
 import type { Backend } from './backend'
-import { iso, today } from './dates'
+import { addMonths, iso, parse, today } from './dates'
 import { formatQty, guessCategory, parseQuick, type Unit } from './quick'
 import { supabase } from './supabase'
 import type { Freq, Profile } from './types'
@@ -9,6 +9,11 @@ export interface VoiceResult {
   todos: { title: string; assignee: string | null; due_date: string | null; recurrence: { freq: Freq; interval: number; mode: 'fixed' | 'after_done' } | null }[]
   shopping: { name: string; amount: number | null; unit: Unit | null; category: string }[]
   recipes: { title: string; url: string | null; ingredients: string[]; wish: boolean; wished_by: string | null }[]
+  contracts?: {
+    name: string; provider: string | null; category: string; direction: 'expense' | 'income'; amount: number
+    interval: 'monthly' | 'quarterly' | 'yearly'; start_date: string | null; min_term_months: number | null
+    notice_months: number | null; owner: string | null; reminder_date: string | null
+  }[]
   summary: string
 }
 
@@ -21,10 +26,11 @@ export async function understand(text: string, profiles: Profile[], me: Profile)
       const msg = ctx ? await ctx.json().then((j: { error?: string }) => j.error).catch(() => null) : null
       throw new Error(msg ?? error.message)
     }
-    return data as VoiceResult
+    const r = data as VoiceResult
+    return { ...r, contracts: r.contracts ?? [] }
   }
   const r = parseQuick(text, profiles)
-  const empty: VoiceResult = { todos: [], shopping: [], recipes: [], summary: '' }
+  const empty: VoiceResult = { todos: [], shopping: [], recipes: [], contracts: [], summary: '' }
   if (!r) return { ...empty, summary: 'Nichts erkannt.' }
   if (r.kind === 'shopping') {
     return { ...empty, shopping: r.items.map((name) => ({ name, amount: null, unit: null, category: guessCategory(name) })), summary: `${r.items.length} × Einkauf (Demo ohne KI)` }
@@ -38,7 +44,7 @@ function personId(name: string | null, profiles: Profile[], fallback: string | n
   return profiles.find((p) => p.display_name.toLowerCase() === name.toLowerCase())?.id ?? fallback
 }
 
-export interface Selection { todos: boolean[]; shopping: boolean[]; recipes: boolean[] }
+export interface Selection { todos: boolean[]; shopping: boolean[]; recipes: boolean[]; contracts: boolean[] }
 
 export async function applyVoice(r: VoiceResult, sel: Selection, backend: Backend, profiles: Profile[], me: Profile) {
   let n = 0
@@ -65,5 +71,31 @@ export async function applyVoice(r: VoiceResult, sel: Selection, backend: Backen
     })
     n++
   }
+  for (const [i, c] of (r.contracts ?? []).entries()) {
+    if (!sel.contracts[i]) continue
+    const owner = c.owner === null ? null : personId(c.owner, profiles, null)
+    await backend.insert('contracts', {
+      name: c.name, provider: c.provider, category: c.category, owner_id: owner, direction: c.direction,
+      amount: Math.max(0, c.amount), interval: c.interval, start_date: c.start_date,
+      min_term_months: c.min_term_months, renewal_months: c.min_term_months ? 1 : null,
+      notice_value: c.notice_months, notice_unit: c.notice_months != null ? 'months' : null,
+      monthly_cancellable_after_min_term: !!c.min_term_months, status: 'active',
+    })
+    if (c.reminder_date) {
+      await backend.insert('todos', {
+        title: `${c.name} kündigen?`, assignee_id: owner ?? me.id, due_date: c.reminder_date,
+        recurrence: null, done_at: null, done_by: null,
+      })
+    }
+    n++
+  }
   return n
+}
+
+/** Für die Vorschau: "in 11 Monaten" zur Kontrolle neben das Datum schreiben */
+export function monthsFromNow(date: string): number {
+  const d = parse(date), t = today()
+  let m = (d.getFullYear() - t.getFullYear()) * 12 + d.getMonth() - t.getMonth()
+  if (addMonths(t, m) > d) m--
+  return m
 }

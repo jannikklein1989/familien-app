@@ -20,6 +20,7 @@ export function useSpeech(onText: (finalText: string) => void) {
   const [interim, setInterim] = useState('')
   const [error, setError] = useState<string | null>(null)
   const rec = useRef<Rec | null>(null)
+  const pending = useRef('')
   const cb = useRef(onText)
   useEffect(() => { cb.current = onText }, [onText])
 
@@ -41,10 +42,12 @@ export function useSpeech(onText: (finalText: string) => void) {
         else tmp += res[0].transcript
       }
       if (fin) cb.current(fin.trim())
+      pending.current = tmp.trim()
       setInterim(tmp)
     }
     r.onerror = (e) => setError(e.error === 'not-allowed' ? 'Mikrofon nicht erlaubt. Bitte in den Browser-Einstellungen freigeben.' : 'Spracherkennung hat nicht geklappt. Nutze sonst das Mikro der Tastatur.')
-    r.onend = () => { setListening(false); setInterim('') }
+    // Beim Stoppen nicht verlieren, was noch nicht als endgültig erkannt war
+    r.onend = () => { if (pending.current) cb.current(pending.current); pending.current = ''; setListening(false); setInterim('') }
     rec.current = r
     r.start()
     setListening(true)
